@@ -6,7 +6,7 @@ const $ = (selector) => document.querySelector(selector);
 const money = (value) => `$${value.toFixed(2)}`;
 const brands = ['ALL', 'NIKE', 'ADIDAS', 'NEW BALANCE', 'PUMA', 'CROCS'];
 const state = { products: [], brand: 'ALL', selected: null, detailFrame: 0, size: null, quantity: 1, cart: [], promo: false, panel: null, lastFocus: null };
-const imagePath = (product, index) => `imgstitch/${product.slug}${index + 1}.jpg`;
+const imagePath = (product, index) => new URL(`imgstitch/${product.slug}${index + 1}.jpg`, document.baseURI).href;
 const imageLabel = (product, index) => `${product.brand} ${product.model}, view ${index + 1} of 3`;
 const productById = (id) => state.products.find((product) => product.id === id);
 const stockFor = (product, size) => !((size + state.products.indexOf(product)) % 7 === 0 || (size + state.products.indexOf(product)) % 11 === 0);
@@ -27,7 +27,7 @@ function renderFilters() {
 }
 function renderProducts() {
   const filtered = state.products.filter((product) => state.brand === 'ALL' || product.brand === state.brand);
-  $('#product-grid').innerHTML = filtered.map((product) => `<article class="product-card" style="view-transition-name:product-${product.slug}" tabindex="0" role="button" aria-label="View ${product.brand} ${product.model}" data-product="${product.id}"><div class="product-image"><span class="product-index">NO. ${String(state.products.indexOf(product) + 1).padStart(3, '0')}</span><span class="product-arrow" aria-hidden="true">↗</span><img src="${imagePath(product, 0)}" alt="${product.brand} ${product.model}" loading="lazy"></div><div class="product-info"><div><span class="product-meta">${product.brand} / ${product.tag}</span><h3>${product.model}</h3></div><span class="product-price">${money(product.price)}</span></div></article>`).join('');
+  $('#product-grid').innerHTML = filtered.map((product, index) => `<article class="product-card" style="view-transition-name:product-${product.slug}" tabindex="0" role="button" aria-label="View ${product.brand} ${product.model}" data-product="${product.id}"><div class="product-image"><span class="product-index">NO. ${String(state.products.indexOf(product) + 1).padStart(3, '0')}</span><span class="product-arrow" aria-hidden="true">↗</span><img src="${imagePath(product, 0)}" alt="${product.brand} ${product.model}" loading="${index < 4 ? 'eager' : 'lazy'}" decoding="async"></div><div class="product-info"><div><span class="product-meta">${product.brand} / ${product.tag}</span><h3>${product.model}</h3></div><span class="product-price">${money(product.price)}</span></div></article>`).join('');
 }
 function setBrand(brand) {
   if (brand === state.brand) return;
@@ -152,13 +152,33 @@ function route() {
   if (product && (state.panel !== 'detail' || state.selected?.id !== id)) openProduct(id, false);
 }
 
+const isCatalog = (products) => Array.isArray(products) && products.length > 0 && products.every((product) =>
+  product && typeof product.id === 'string' && typeof product.brand === 'string' &&
+  typeof product.model === 'string' && typeof product.slug === 'string' && Number.isFinite(product.price));
+
+async function loadCatalog() {
+  const fallback = window.C_SHARKS_PRODUCTS;
+  if (location.protocol !== 'file:') {
+    try {
+      const response = await fetch(new URL('products.json', document.baseURI));
+      if (!response.ok) throw new Error(`Catalog response ${response.status}`);
+      const products = await response.json();
+      if (!isCatalog(products)) throw new Error('Invalid product catalog');
+      return products;
+    } catch (error) {
+      console.warn('Using the local catalog copy:', error);
+    }
+  }
+  if (isCatalog(fallback)) return fallback;
+  throw new Error('No valid product catalog is available');
+}
+
 async function init() {
+  renderFilters();
   try {
-    const response = await fetch('products.json');
-    if (!response.ok) throw new Error(`Catalog response ${response.status}`);
-    state.products = await response.json();
+    state.products = await loadCatalog();
     state.cart = readCart();
-    renderFilters(); renderProducts(); renderCart(); route();
+    renderProducts(); renderCart(); route();
   } catch (error) { console.error(error); $('#product-grid').innerHTML = '<p>THE WEB SHOP COULD NOT LOAD. PLEASE RELOAD THE PAGE.</p>'; }
 }
 
@@ -203,25 +223,98 @@ init();
   const counter = document.getElementById('counterNum');
   const total = products.length;
   const darkUi = [false, true, false, true, true];
-  let current = 0;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let current = -1;
+  let activeAnimations = [];
+  let lastSwipeAt = 0;
 
-  function showSlide(index) {
-    current = (index + total) % total;
+  function cancelRotations() {
+    activeAnimations.forEach((animation) => animation.cancel());
+    activeAnimations = [];
+  }
+
+  function animateRotation(product, frames, duration) {
+    const animation = product.animate(frames, {
+      duration,
+      easing: 'cubic-bezier(.76, 0, .24, 1)'
+    });
+    animation.addEventListener('finish', () => animation.cancel(), { once: true });
+    activeAnimations.push(animation);
+  }
+
+  function showSlide(index, direction = 1) {
+    const next = (index + total) % total;
+    if (next === current) return;
+    cancelRotations();
+    const previous = current < 0 ? null : products[current];
+    current = next;
     track.style.transform = `translate3d(${-current * 100}vw, 0, 0)`;
-    products.forEach((product, i) => product.classList.toggle('active', i === current));
+    products.forEach((product, i) => {
+      const active = i === current;
+      product.classList.toggle('active', active);
+      product.tabIndex = active ? 0 : -1;
+      product.setAttribute('aria-hidden', String(!active));
+      product.style.removeProperty('--tilt-x');
+      product.style.removeProperty('--tilt-y');
+    });
     dots.forEach((dot, i) => dot.classList.toggle('active', i === current));
     counter.textContent = `${String(current + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
     document.body.dataset.darkUi = String(darkUi[current]);
+
+    if (previous && !reducedMotion.matches) {
+      animateRotation(previous, [
+        { transform: 'translate(-50%, -50%) rotateY(0deg) scale(1)', opacity: 1 },
+        { transform: `translate(-50%, -50%) rotateY(${direction * 180}deg) scale(.78)`, opacity: 0 }
+      ], 780);
+      animateRotation(products[current], [
+        { transform: `translate(-50%, -50%) rotateY(${-direction * 180}deg) scale(.78)`, opacity: 0 },
+        { transform: 'translate(-50%, -50%) rotateY(0deg) scale(1)', opacity: 1 }
+      ], 900);
+    }
   }
 
-  document.getElementById('snav-prev').addEventListener('click', () => showSlide(current - 1));
-  document.getElementById('snav-next').addEventListener('click', () => showSlide(current + 1));
+  function spinFeatured() {
+    if (state.panel || $('#home').hidden || reducedMotion.matches || Date.now() - lastSwipeAt < 450) return;
+    cancelRotations();
+    const product = products[current];
+    product.style.removeProperty('--tilt-x');
+    product.style.removeProperty('--tilt-y');
+    animateRotation(product, [
+      { transform: 'translate(-50%, -50%) rotateY(0deg) scale(1)' },
+      { transform: 'translate(-50%, -50%) rotateY(180deg) scale(.86)', offset: .5 },
+      { transform: 'translate(-50%, -50%) rotateY(360deg) scale(1)' }
+    ], 1100);
+  }
+
+  document.getElementById('snav-prev').addEventListener('click', () => showSlide(current - 1, -1));
+  document.getElementById('snav-next').addEventListener('click', () => showSlide(current + 1, 1));
   document.addEventListener('keydown', (event) => {
     if (state.panel || $('#home').hidden || ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
       event.preventDefault();
-      showSlide(current + (event.key === 'ArrowRight' ? 1 : -1));
+      const direction = event.key === 'ArrowRight' ? 1 : -1;
+      showSlide(current + direction, direction);
     }
+  });
+
+  products.forEach((product) => {
+    product.addEventListener('click', spinFeatured);
+    product.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        spinFeatured();
+      }
+    });
+    product.addEventListener('pointermove', (event) => {
+      if (event.pointerType === 'touch' || reducedMotion.matches || activeAnimations.some((animation) => animation.playState === 'running')) return;
+      const rect = product.getBoundingClientRect();
+      product.style.setProperty('--tilt-y', `${((event.clientX - rect.left) / rect.width - .5) * 18}deg`);
+      product.style.setProperty('--tilt-x', `${(.5 - (event.clientY - rect.top) / rect.height) * 12}deg`);
+    });
+    product.addEventListener('pointerleave', () => {
+      product.style.removeProperty('--tilt-x');
+      product.style.removeProperty('--tilt-y');
+    });
   });
 
   const stage = document.getElementById('slider-sticky');
@@ -230,7 +323,11 @@ init();
   stage.addEventListener('touchend', (event) => {
     if (touchStart === null) return;
     const distance = event.changedTouches[0].clientX - touchStart;
-    if (Math.abs(distance) > 40) showSlide(current + (distance < 0 ? 1 : -1));
+    if (Math.abs(distance) > 40) {
+      const direction = distance < 0 ? 1 : -1;
+      lastSwipeAt = Date.now();
+      showSlide(current + direction, direction);
+    }
     touchStart = null;
   }, { passive: true });
 
