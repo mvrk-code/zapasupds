@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f5">
+  <meta name="description" content="C-SHARKS — featured footwear and a web shop with 20 styles across five brands.">
+  <title>C-SHARKS — Web Shop</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <nav aria-label="Main navigation"><a class="wordmark" href="#home" data-nav="home">C-SHARKS</a><a class="shop-nav" href="#shop" data-nav="shop">WEB SHOP</a></nav>
+  </header>
+  <button class="cart-trigger" id="cart-trigger" type="button" aria-label="Open cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.1 10.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span class="cart-count" id="cart-count">0</span></button>
+  <main id="main">
+
+    <!-- ══ §1 HERO CINEMATIC SLIDER ══ -->
+    <section id="home" class="home-view" aria-label="Featured footwear">
+    <div id="slider-wrap">
+      <div id="slider-sticky">
+
+        <div class="slide-counter">
+          <span class="counter-num" id="counterNum">01 / 05</span>
+          <div class="counter-dots" id="dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+
+        <div class="slide-track" id="slideTrack">
+
+          <!-- Slide 1: CROCS — rojo -->
+          <div class="slide" style="background:#C41E3A">
+            <div class="slide-glow" style="background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(255,120,100,.3) 0%,transparent 70%)"></div>
+            <div class="slide-vignette"></div>
+            <span class="bg-text">CROCS</span>
+          </div>
+
+          <!-- Slide 2: PUMA — amarillo -->
+          <div class="slide" style="background:#D4E842">
+            <div class="slide-glow" style="background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(255,255,180,.35) 0%,transparent 70%)"></div>
+            <div class="slide-vignette" style="background:radial-gradient(ellipse 65% 65% at 50% 50%,transparent 30%,rgba(80,95,0,.5) 100%)"></div>
+            <span class="bg-text">PUMA</span>
+          </div>
+
+          <!-- Slide 3: NEW BALANCE — azul -->
+          <div class="slide" style="background:#1A5FA8">
+            <div class="slide-glow" style="background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(80,160,255,.28) 0%,transparent 70%)"></div>
+            <div class="slide-vignette"></div>
+            <span class="bg-text">NEW BALANCE</span>
+          </div>
+
+          <!-- Slide 4: ADIDAS — beige -->
+          <div class="slide" style="background:#E8D5A3">
+            <div class="slide-glow" style="background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(255,220,160,.4) 0%,transparent 70%)"></div>
+            <div class="slide-vignette" style="background:radial-gradient(ellipse 65% 65% at 50% 50%,transparent 30%,rgba(100,70,20,.4) 100%)"></div>
+            <span class="bg-text">ADIDAS</span>
+          </div>
+
+          <!-- Slide 5: NIKE — blanco -->
+          <div class="slide" style="background:#FFFFFF">
+            <div class="slide-glow" style="background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(200,220,255,.4) 0%,transparent 70%)"></div>
+            <div class="slide-vignette" style="background:radial-gradient(ellipse 65% 65% at 50% 50%,transparent 30%,rgba(0,0,0,.08) 100%)"></div>
+            <span class="bg-text">NIKE</span>
+          </div>
+
+        </div>
+
+        <div id="product-stage">
+          <img class="stage-prod" src="imgstitch/crocs.png"      alt="Crocs">
+          <img class="stage-prod" src="imgstitch/puma.png"       alt="Puma">
+          <img class="stage-prod" src="imgstitch/newbalance.png" alt="New Balance">
+          <img class="stage-prod" src="imgstitch/adidas.png"     alt="Adidas">
+          <img class="stage-prod" src="imgstitch/nike.png"       alt="Nike">
+        </div>
+
+      </div>
+    </div>
+
+    <div id="slider-nav" class="snav-hidden">
+      <button class="snav-btn" id="snav-prev" type="button" aria-label="Previous slide">&#8592;</button>
+      <button class="snav-btn" id="snav-next" type="button" aria-label="Next slide">&#8594;</button>
+    </div>
+    </section>
+
+    <!-- ══ SHOP ══ -->
+    <section id="shop" class="shop-section" aria-label="Web shop" hidden>
+      <div class="catalog-toolbar"><div class="filters" id="brand-filters" role="group" aria-label="Filter by brand"></div></div>
+      <div class="product-grid" id="product-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer hidden><span>© 2026 C-SHARKS</span><span>FOOTWEAR, IN MOTION.</span><span>BUILT FOR THE CURIOUS.</span></footer>
+
+  <div class="overlay" id="overlay" hidden></div>
+  <section class="detail-panel" id="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-title" aria-hidden="true" inert>
+    <button class="panel-close" id="detail-close" type="button" aria-label="Close product details">×</button>
+    <div class="detail-media"><div class="detail-photo"><img id="detail-image" alt=""></div><div class="detail-thumbs" id="detail-thumbs"></div></div>
+    <div class="detail-info"><span class="eyebrow" id="detail-brand"></span><h2 id="detail-title"></h2><p class="detail-price" id="detail-price"></p><p class="detail-description" id="detail-description"></p><div class="form-section"><div class="form-heading"><span>COLORWAY</span><span id="color-name"></span></div><div class="color-options" id="color-options"></div></div><div class="form-section"><div class="form-heading"><span>SELECT SIZE (EU)</span><span id="size-status">SELECT ONE</span></div><div class="size-options" id="size-options"></div></div><div class="form-section quantity-section"><div class="form-heading"><span>QUANTITY</span></div><div class="quantity-control"><button id="detail-minus" type="button" aria-label="Decrease quantity">−</button><output id="detail-quantity">1</output><button id="detail-plus" type="button" aria-label="Increase quantity">+</button></div></div><button class="action-outline" id="add-to-cart" type="button">ADD TO CART <span>↗</span></button><button class="action-solid" id="buy-now" type="button">BUY IT NOW <span>↗</span></button><p class="detail-note">SHIPPING AND TAXES CALCULATED AT CHECKOUT.</p></div>
+  </section>
+  <aside class="cart-panel" id="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-hidden="true" inert><div class="cart-head"><div><span class="eyebrow">YOUR SELECTION</span><h2 id="cart-title">CART <span id="cart-heading-count">(0)</span></h2></div><button class="panel-close cart-close" id="cart-close" type="button" aria-label="Close cart">×</button></div><div class="cart-items" id="cart-items"></div><div class="cart-footer"><button class="promo-toggle" id="promo-toggle" type="button" aria-expanded="false">+ ADD PROMO CODE</button><div class="promo-form" id="promo-form" hidden><input id="promo-input" type="text" placeholder="ENTER CODE" aria-label="Promo code" maxlength="24"><button id="promo-apply" type="button">APPLY</button><p id="promo-message" role="status"></p></div><div class="total-line"><span>SUBTOTAL</span><strong id="subtotal">$0.00</strong></div><div class="total-line discount-line" id="discount-line" hidden><span>DISCOUNT</span><strong id="discount">−$0.00</strong></div><div class="total-line grand-total"><span>ESTIMATED TOTAL</span><strong id="total">$0.00</strong></div><p>SHIPPING AND TAXES CALCULATED AT CHECKOUT.</p><button class="action-solid checkout" id="checkout" type="button">CHECK OUT <span>↗</span></button></div></aside>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
